@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="es" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Test de Personalidad – DISC</title>
+    <meta name="description" content="Cuestionario DISC: reparte 4–3–2–1 en cada fila; resultados, lectura espiritual y PDF." />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🧭</text></svg>">
+    <!-- Tailwind via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { darkMode: 'class' };
+    </script>
+    <style>
+      html, body { height: 100%; }
+    </style>
+  </head>
+  <body class="min-h-full bg-gray-50 text-gray-900 dark:bg-neutral-950 dark:text-gray-100">
+    <div id="root"></div>
+
+    <!-- React 18 UMD + Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- jsPDF + autotable -->
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.js"></script>
+
+    <script type="text/babel">
+      const { useState, useEffect, useMemo } = React;
+      const { jsPDF } = window.jspdf || {};
+
+      // --- DATA ---
+      const rows = [
+        { prompt: "Mi personalidad es más...", W: "De jefe y directo", X: "Extrovertido y expresivo", Y: "Tranquila e informal", Z: "De sentido común y precisión" },
+        { prompt: "Prefiero un entorno en el que esté rodeado de...", W: "Indicadores de logros personales, recompensas y objetivos", X: "Fotografías, cartas y mis 'cosas'", Y: "Recuerdos y confort", Z: "Orden, funcionalidad y organización" },
+        { prompt: "Mi estilo personal tiende a...", W: "Orientado a los resultados", X: "Impulsado por las personas", Y: "Orientado a equipos/procesos", Z: "Orientado al detalle" },
+        { prompt: "Mi forma de responder a los demás es...", W: "Directo al grano", X: "Amable y servicial", Y: "Equilibrado y controlado", Z: "Frío y objetivo" },
+        { prompt: "Cuando escucho a los demás, yo...", W: "Me impaciento muchas veces", X: "Mi mente empieza a divagar", Y: "Quiero escuchar con atención", Z: "Soy selectivo y me centro en los hechos" },
+        { prompt: "Me gusta hablar con los demás...", W: "Sobre mis logros", X: "Sobre mí mismo y sobre otras personas", Y: "Sobre mi familia y amigos", Z: "Sobre las cosas, la información o la organización" },
+        { prompt: "En las relaciones, mi tendencia es...", W: "Conducir a otros", X: "Influir en los demás", Y: "Aceptar a los demás", Z: "Evaluar a los demás" },
+        { prompt: "Cuando tomo decisiones, tengo una inclinación a...", W: "Ser rápido o usar reacciones impulsivas", X: "Hacer lo que siento", Y: "Estudiar la situación y ser cauteloso", Z: "Recopilar información y ser objetivo" },
+        { prompt: "En cuanto a mi tiempo, creo que...", W: "Siempre estoy presionado por él", X: "Tiendo a pensar en el costo del tiempo", Y: "Respeto el tiempo, pero no me presiono fácilmente", Z: "Valoro y gestiono bien mi tiempo" },
+        { prompt: "El ritmo al que vivo es...", W: "Veloz", X: "Entusiasta", Y: "Equilibrado", Z: "Controlado" },
+        { prompt: "Mi tono de voz normal es...", W: "Emotivo, directo y dinámico", X: "Emotivo y entusiasta", Y: "Baja emoción y excitación", Z: "Sin emociones y reservado" },
+        { prompt: "Mis gestos suelen ser...", W: "Fuertes y rápidos", X: "Abiertos y amables", Y: "Comedidos", Z: "Restringidos e intencionados" },
+        { prompt: "Mi forma favorita de vestirme es...", W: "Formal", X: "Casual", Y: "Dependiendo del lugar", Z: "Conservadora" },
+        { prompt: "Mis actitudes en general se pueden describir como...", W: "Autoritario", X: "Elegante, amigable y extrovertido", Y: "Tolerante y abierto", Z: "Observador o reservado" },
+        { prompt: "Mis conversaciones giran en torno a...", W: "Ir al punto de la pregunta", X: "Historias sobre mí y sobre los demás", Y: "\"Cómo hacer\" y/o relaciones", Z: "Hechos, información y datos" },
+      ];
+
+      const columns = [ { key: 'W', label: 'W' }, { key: 'X', label: 'X' }, { key: 'Y', label: 'Y' }, { key: 'Z', label: 'Z' } ];
+
+      const stylesMap = {
+        W: {
+          nombre: "Dominante",
+          virtudes: "Liderazgo, decisión, impulso para lograr resultados, valentía para tomar riesgos.",
+          riesgos: "Impaciencia, dureza, tendencia al control. Puede herir sin querer.",
+          versiculos: ["Proverbios 15:1 (Respuesta amable)", "Gálatas 5:22-23 (Fruto del Espíritu)"],
+          practicas: "Ejercitar mansedumbre, escuchar antes de hablar, delegar, orar por un corazón humilde.",
+        },
+        X: {
+          nombre: "Influyente",
+          virtudes: "Alegría, entusiasmo, carisma, hospitalidad; anima a los demás.",
+          riesgos: "Impulsividad, hablar de más, dificultad con la constancia.",
+          versiculos: ["Filipenses 4:4 (Regocíjense)", "Proverbios 10:19 (Prudencia al hablar)"],
+          practicas: "Cultivar disciplina y dominio propio; reservar tiempo de quietud y oración.",
+        },
+        Y: {
+          nombre: "Estable",
+          virtudes: "Paz, paciencia y constancia; escucha activa; crea estabilidad y armonía.",
+          riesgos: "Pasividad, posponer decisiones, evitar confrontaciones necesarias, resistencia al cambio.",
+          versiculos: ["Mateo 5:9 (Pacificadores)", "2 Timoteo 1:7 (Espíritu de poder)"],
+          practicas: "Pedir valentía al Espíritu, dar pasos pequeños pero firmes, establecer límites y ritmos saludables, hablar con verdad en amor.",
+        },
+        Z: {
+          nombre: "Conforme",
+          virtudes: "Excelencia, exactitud y precisión; enfoque en calidad; respeto por normas y procesos.",
+          riesgos: "Perfeccionismo, crítica dura (propia y ajena), pesimismo, rigidez ante la ambigüedad.",
+          versiculos: ["Colosenses 3:23 (Hacer como para el Señor)", "Salmo 139:14 (Hecho de manera maravillosa)"],
+          practicas: "Abrazar la gracia; distinguir el espíritu detrás de la norma; recordar que aquí 'Conforme' se refiere a conformidad técnica (calidad/precisión), no a 'conformarse al mundo'; celebrar el progreso; compartir con otros para no aislarse.",
+        },
+      };
+
+      // --- helpers ---
+      function isValidRow(row){
+        const vals = [row.W, row.X, row.Y, row.Z];
+        if (vals.some(v => v === null || v === undefined)) return false;
+        const set = new Set(vals);
+        return set.size === 4 && vals.every(v => [1,2,3,4].includes(v));
+      }
+      function sumScores(answers){
+        return answers.reduce((acc,row)=>{ ['W','X','Y','Z'].forEach(k=> acc[k]+= row[k]||0); return acc; }, {W:0,X:0,Y:0,Z:0});
+      }
+
+      const Badge = ({children}) => (
+        <span className="inline-flex items-center justify-center min-w-8 h-8 px-2 rounded-full bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200 font-bold">{children}</span>
+      );
+
+      function Explanation({ scores }){
+        const ordered = useMemo(()=> Object.entries(scores).sort((a,b)=> b[1]-a[1]), [scores]);
+        const [topKey, secondKey] = [ordered[0][0], ordered[1][0]];
+        const top = stylesMap[topKey];
+        const second = stylesMap[secondKey];
+        return (
+          <div className="mt-6 space-y-4">
+            <div className="p-4 rounded-2xl shadow bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 border border-neutral-200 dark:border-neutral-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Resultados</h2>
+              <div className="mt-2 grid grid-cols-2 gap-3">
+                {Object.entries(scores).map(([k,v])=> (
+                  <div key={k} className={`p-3 rounded-xl border ${k===topKey? 'border-black dark:border-white' : 'border-gray-200 dark:border-neutral-700'}`}>
+                    <div className="flex items-center gap-2">
+                      <Badge>{k}</Badge>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{stylesMap[k].nombre}</div>
+                    </div>
+                    <div className="mt-2 text-2xl font-bold">{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl shadow bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 border border-neutral-200 dark:border-neutral-700">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Lectura espiritual</h3>
+              <p className="mt-2 text-gray-800 dark:text-gray-200">
+                Tu estilo predominante es <b>{top.nombre}</b> y el secundario es <b>{second.nombre}</b>.
+              </p>
+              <div className="mt-3 grid md:grid-cols-2 gap-4">
+                {[topKey, secondKey].map((k)=> (
+                  <div key={k} className="p-3 rounded-2xl bg-gray-50 dark:bg-neutral-800 text-gray-900 dark:text-gray-100">
+                    <div className="flex items-center gap-2">
+                      <Badge>{k}</Badge>
+                      <div className="font-medium">{stylesMap[k].nombre}</div>
+                    </div>
+                    <ul className="list-disc ml-6 mt-2 text-sm space-y-2">
+                      <li><b>Fortalezas:</b> {stylesMap[k].virtudes}</li>
+                      <li><b>Riesgos/Áreas a crecer:</b> {stylesMap[k].riesgos}</li>
+                      <li><b>Prácticas sugeridas:</b> {stylesMap[k].practicas}</li>
+                      <li><b>Pasajes:</b> {stylesMap[k].versiculos.join(', ')}</li>
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">Nota: Este ejercicio es orientativo, no diagnóstico.</p>
+            </div>
+          </div>
+        );
+      }
+
+      function SelectCell({ value, onChange, disabledValues }){
+        const options = [4,3,2,1];
+        return (
+          <select value={value ?? ''} onChange={e=> onChange(Number(e.target.value))}
+                  className="w-full rounded-xl border px-2 py-2 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 border-neutral-200 dark:border-neutral-700">
+            <option value="" disabled>Selecciona</option>
+            {options.map(n=> (
+              <option key={n} value={n} disabled={disabledValues.includes(n)}>{n}</option>
+            ))}
+          </select>
+        );
+      }
+
+      function App(){
+        const [current, setCurrent] = useState(0);
+        const [answers, setAnswers] = useState(()=> rows.map(()=> ({W:null,X:null,Y:null,Z:null, locked:false})));
+        const [showResults, setShowResults] = useState(false);
+        const [isDark, setIsDark] = useState(false); // wrapper 'dark' class (works with CDN config)
+        const [jumpIdx, setJumpIdx] = useState('');
+        const [editFromResults, setEditFromResults] = useState(false);
+        const [justJumped, setJustJumped] = useState(false);
+        const [shouldFlash, setShouldFlash] = useState(false);
+
+        // persistence (versioned)
+        const STATE_KEY = 'tp_v3_state';
+        const STATE_VER = 3;
+        useEffect(()=>{
+          try{
+            const raw = localStorage.getItem(STATE_KEY);
+            if(!raw) return;
+            const parsed = JSON.parse(raw);
+            if(parsed.version !== STATE_VER) return; // ignore old versions
+            if(Array.isArray(parsed.answers) && parsed.answers.length === rows.length){ setAnswers(parsed.answers); }
+            if(typeof parsed.current === 'number') setCurrent(parsed.current);
+            if(typeof parsed.showResults === 'boolean') setShowResults(parsed.showResults);
+          }catch(e){ console.warn('No se pudo cargar el estado', e); }
+        },[]);
+        useEffect(()=>{
+          try{
+            localStorage.setItem(STATE_KEY, JSON.stringify({ version: STATE_VER, current, answers, showResults }));
+          }catch(e){ console.warn('No se pudo guardar el estado', e); }
+        },[current, answers, showResults]);
+
+        // theme follows system
+        useEffect(()=>{
+          if(!window.matchMedia) return;
+          const mm = window.matchMedia('(prefers-color-scheme: dark)');
+          const handler = e => setIsDark(!!e.matches);
+          handler(mm);
+          mm.addEventListener ? mm.addEventListener('change', handler) : mm.addListener(handler);
+          return ()=> { mm.removeEventListener ? mm.removeEventListener('change', handler) : mm.removeListener(handler); };
+        },[]);
+
+        const currRow = rows[current];
+        const currAns = answers[current];
+        const disabledValues = useMemo(()=> Object.entries(currAns).filter(([k])=> k!=='locked').map(([,v])=> v).filter(v=> v!==null), [currAns]);
+        const allSelected = useMemo(()=>{ const vals = [currAns.W,currAns.X,currAns.Y,currAns.Z]; return vals.every(v=> v!==null) && new Set(vals).size===4; },[currAns]);
+        const progress = Math.round((answers.filter(a=> a.locked).length / rows.length) * 100);
+        const scores = useMemo(()=> sumScores(answers), [answers]);
+        const isComplete = useMemo(()=> answers.every(r=> isValidRow(r) && r.locked), [answers]);
+
+        const handleConfirm = ()=>{
+          if(!allSelected) return;
+          const next = answers.slice(); next[current] = { ...next[current], locked:true };
+          setAnswers(next);
+          if(current < rows.length - 1) setCurrent(current+1); else setShowResults(true);
+        };
+        const handlePrev = ()=> setCurrent(c=> Math.max(0, c-1));
+        const handleResetRow = ()=>{ const next = answers.slice(); next[current] = {W:null,X:null,Y:null,Z:null,locked:false}; setAnswers(next); };
+        const setCell = (key,val)=>{ const next = answers.slice(); next[current] = { ...next[current], [key]:val, locked:false }; setAnswers(next); };
+        const handleRestart = ()=>{ setAnswers(rows.map(()=> ({W:null,X:null,Y:null,Z:null,locked:false}))); setCurrent(0); setShowResults(false); setEditFromResults(false); setJustJumped(false); localStorage.removeItem(STATE_KEY); };
+
+        const ordered = useMemo(()=> Object.entries(scores).sort((a,b)=> b[1]-a[1]), [scores]);
+        const [topKey, secondKey] = [ordered[0][0], ordered[1][0]];
+        const buildPastoralMessage = (a,b)=>{
+          const A = stylesMap[a].nombre, B = stylesMap[b].nombre;
+          const combos = {
+            WX: `Dios te ha dado determinación (${A}) y calidez relacional (${B}). Lidera sirviendo: escucha antes de decidir, y anima a otros a crecer (1 Co 13).`,
+            WY: `Con tu firmeza (${A}) y paz (${B}), trae orden sin perder ternura. Busca silencio para discernir y decide con la mansedumbre de Cristo (Mt 11:29).`,
+            WZ: `Tu enfoque en resultados (${A}) y excelencia (${B}) es valioso. Descansa en la gracia cuando el plan cambie y celebra el progreso (Col 3:23).`,
+            XW: `Tu entusiasmo (${A}) unido a valentía (${B}) inspira. Escucha, ora y actúa para que tu influencia levante y no agote (Fil 4:4).`,
+            XY: `Dios usa tu alegría (${A}) y calma (${B}) para reconciliar. Sé constante en lo pequeño; la fidelidad diaria multiplica fruto (Gál 5:22-23).`,
+            XZ: `Tu carisma (${A}) y amor al detalle (${B}) iluminan. Ordena prioridades en oración y verás fruto duradero (Jn 15:5).`,
+            YW: `Tu serenidad (${A}) con determinación (${B}) es refugio activo. Da pasos firmes y habla la verdad en amor (Ef 4:15).`,
+            YX: `Tu paz (${A}) y calidez (${B}) acercan corazones. Establece hábitos que sostengan tu servicio (Mi 6:8).`,
+            YZ: `Tu equilibrio (${A}) y precisión (${B}) cuidan procesos y personas. Celebra, no te quedes solo en el análisis (Sal 139:14).`,
+            ZW: `Tu excelencia (${A}) con dirección (${B}) logra metas. Deja espacio a la gracia; lidera con humildad (1 P 5:3).`,
+            ZX: `Tu sensibilidad (${A}) y alegría (${B}) embellecen. Comparte tu visión con sencillez; otros verán a Dios en ello (Mt 5:16).`,
+            ZY: `Tu cuidado (${A}) y calma (${B}) sostienen. No temas pedir ayuda; la comunidad es regalo de Dios (Hb 10:24-25).`,
+          };
+          return combos[`${a}${b}`] || `Dios usa tu combinación de ${A} y ${B}. Camina en amor, verdad y gracia; desarrolla tus dones al servicio de otros.`;
+        };
+        const defaultPastoral = useMemo(()=> buildPastoralMessage(topKey, secondKey), [topKey, secondKey]);
+
+        // jump handlers
+        const handleJumpTo = ()=>{
+          const n = parseInt(jumpIdx, 10);
+          if(!Number.isNaN(n) && n>=1 && n<=rows.length){ setCurrent(n-1); setShowResults(false); setEditFromResults(true); setJustJumped(true); }
+        };
+        const handleJumpToIndex = (idx)=>{ if(typeof idx==='number' && idx>=0 && idx<rows.length){ setCurrent(idx); setShowResults(false); setEditFromResults(true); setJustJumped(true); } };
+
+        useEffect(()=>{
+          if(!showResults && justJumped){ setShouldFlash(true); const t = setTimeout(()=> setShouldFlash(false), 1800); setJustJumped(false); return ()=> clearTimeout(t); }
+        }, [current, showResults, justJumped]);
+
+        // PDF
+        const downloadPDF = ()=>{
+          if(!jsPDF){ alert('No se pudo cargar jsPDF. Revisa tu conexión.'); return; }
+          const doc = new jsPDF({ unit:'pt', format:'a4' });
+          const margin = 40;
+          doc.setFontSize(18); doc.text('Resultados – Test de Personalidad', margin, margin);
+          doc.setFontSize(10); doc.text(`Fecha: ${new Date().toLocaleString()}`, margin, margin+16);
+
+          if(doc.autoTable){
+            doc.autoTable({ startY: margin+30, head:[["Clave","Estilo","Puntaje"]], body: Object.entries(sumScores(answers)).map(([k,v])=> [k, stylesMap[k].nombre, String(v)]), styles:{fontSize:10} });
+            let y = doc.lastAutoTable.finalY + 16;
+            doc.setFontSize(12); doc.text(`Estilo predominante: ${stylesMap[ordered[0][0]].nombre}. Secundario: ${stylesMap[ordered[1][0]].nombre}.`, margin, y);
+            const spiritualRows = [ordered[0][0], ordered[1][0]].map(k=> [stylesMap[k].nombre, stylesMap[k].virtudes, stylesMap[k].riesgos, stylesMap[k].practicas, stylesMap[k].versiculos.join(', ')]);
+            doc.autoTable({ startY: y+12, head:[["Estilo","Fortalezas","Riesgos","Prácticas","Pasajes"]], body: spiritualRows, styles:{fontSize:9, cellPadding:6, overflow:'linebreak'}, headStyles:{ fillColor:[3,105,161] } });
+            y = doc.lastAutoTable.finalY + 16;
+            doc.setFontSize(12); doc.text('Mensaje pastoral para recordar:', margin, y);
+            const wrapped = doc.splitTextToSize( defaultPastoral, 515 );
+            doc.setFontSize(11); doc.text(wrapped, margin, y+16);
+            y = y + 16 + wrapped.length*14 + 16;
+            doc.autoTable({ startY: y, head:[["#","W","X","Y","Z"]], body: answers.map((r,i)=> [i+1, r.W??'', r.X??'', r.Y??'', r.Z??'']), styles:{fontSize:9} });
+          }
+          const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+          doc.save(`resultado_test_personalidad_${stamp}.pdf`);
+        };
+
+        return (
+          <div className={isDark? 'dark' : ''}>
+            <div className="max-w-4xl mx-auto p-4 md:p-6">
+              <h1 className="text-2xl md:text-3xl font-bold text-sky-700 dark:text-sky-300 text-center">Test de Personalidad – DISC</h1>
+
+              {!showResults && (
+                <div className="text-sm mt-2 text-gray-700 dark:text-gray-300 space-y-2">
+                  <p><b>Cómo responder:</b> en cada fila reparte <b>4, 3, 2 y 1</b> entre las 4 opciones.</p>
+                  <p><b>4</b> = me describe la <i>mayoría de las veces</i>; <b>3</b> = <i>muchas veces</i>; <b>2</b> = <i>ocasionalmente</i>; <b>1</b> = <i>raramente</i>.</p>
+                  <p>No repitas números en la misma fila. Puedes regresar y corregir antes de confirmar.</p>
+                  <p><i>Antes de comenzar pídele a Dios la guía para contestar a conciencia, tómate el tiempo para analizar las respuestas.</i></p>
+                </div>
+              )}
+
+              <div className="mt-4">
+                <div className="h-2 bg-gray-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-black dark:bg-white transition-all" style={{ width: `${progress}%` }} />
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">{progress}% completado</div>
+              </div>
+
+              {!showResults ? (
+                <div className={`mt-6 p-4 rounded-2xl border bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 ${shouldFlash ? 'ring-2 ring-sky-500 dark:ring-sky-300 shadow-lg' : ''}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm text-gray-500 dark:text-gray-400">Pregunta {current+1} de {rows.length}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">(puedes editar antes de confirmar)</div>
+                  </div>
+                  <div className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">{rows[current].prompt}</div>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {columns.map(({key,label})=> (
+                      <div key={key} className="p-3 rounded-2xl bg-gray-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">
+                        <div className="flex items-center justify-between mb-2 gap-3">
+                          <div className="shrink-0"><Badge>{label}</Badge></div>
+                          <SelectCell value={answers[current][key]} onChange={(v)=> { const next = answers.slice(); next[current] = { ...next[current], [key]:v, locked:false }; setAnswers(next); }} disabledValues={Object.values(answers[current]).filter(v=> v!==null && v!==answers[current][key])} />
+                        </div>
+                        <div className="text-sm text-gray-700 dark:text-gray-200">{rows[current][key]}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 disabled:opacity-50" onClick={()=> setCurrent(c=> Math.max(0, c-1))} disabled={current===0}>← Anterior</button>
+                    <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" onClick={()=>{ const next = answers.slice(); next[current] = {W:null,X:null,Y:null,Z:null,locked:false}; setAnswers(next); }}>Borrar selección actual</button>
+                    <button className={`px-4 py-2 rounded-xl text-white ${([answers[current].W,answers[current].X,answers[current].Y,answers[current].Z].every(v=> v!==null) && new Set([answers[current].W,answers[current].X,answers[current].Y,answers[current].Z]).size===4) ? 'bg-black dark:bg-white dark:text-black' : 'bg-gray-400'}`} onClick={()=>{ const vals=[answers[current].W,answers[current].X,answers[current].Y,answers[current].Z]; if(!(vals.every(v=> v!==null) && new Set(vals).size===4)) return; const next=answers.slice(); next[current]={...next[current],locked:true}; setAnswers(next); if(current<rows.length-1) setCurrent(current+1); else setShowResults(true); }} disabled={!([answers[current].W,answers[current].X,answers[current].Y,answers[current].Z].every(v=> v!==null) && new Set([answers[current].W,answers[current].X,answers[current].Y,answers[current].Z]).size===4)}>Confirmar y {current<rows.length-1? 'siguiente →' : 'finalizar →'}</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-6">
+                  <Explanation scores={scores} />
+
+                  <div className="mt-6 p-6 rounded-2xl border bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 text-center">
+                    <div className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">Mensaje pastoral para recordar</div>
+                    <p className="mt-2 text-lg md:text-xl leading-relaxed text-gray-900 dark:text-gray-100">{defaultPastoral}</p>
+                  </div>
+
+                  <div className="mt-4 p-4 rounded-2xl border bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700">
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">¿Quieres corregir algo?</div>
+                    <div className="mt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <label htmlFor="jump-question" className="text-sm text-gray-700 dark:text-gray-300">Editar:</label>
+                      <select id="jump-question" value={jumpIdx} onChange={e=> setJumpIdx(e.target.value)} className="w-full sm:w-auto rounded-xl border px-3 py-2 bg-white dark:bg-neutral-900 text-gray-900 dark:text-gray-100 border-neutral-200 dark:border-neutral-700">
+                        <option value="">Selecciona una pregunta</option>
+                        {rows.map((r,i)=> (
+                          <option key={i} value={i+1}>{i+1}. {(r.prompt.length>60)? (r.prompt.slice(0,60)+'…') : r.prompt}</option>
+                        ))}
+                      </select>
+                      <button className="w-full sm:w-auto px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 disabled:opacity-50" onClick={()=>{ const n = parseInt(jumpIdx,10); if(!Number.isNaN(n) && n>=1 && n<=rows.length){ setCurrent(n-1); setShowResults(false); setEditFromResults(true); setJustJumped(true); }}} disabled={!jumpIdx}>Ir a editar →</button>
+                      <span className="text-xs text-gray-600 dark:text-gray-400">(No borra tus demás respuestas)</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-4 rounded-2xl border bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700">
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                      <button className="w-full sm:w-auto px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 disabled:opacity-50" onClick={()=> { const complete = answers.every(r=> isValidRow(r) && r.locked); if (!complete) return; setShowResults(true); setEditFromResults(false); }} disabled={!answers.every(r=> isValidRow(r) && r.locked)}>Recalcular resultados</button>
+                      {!answers.every(r=> isValidRow(r) && r.locked) && (
+                        <div className="mt-2 sm:mt-0 text-xs text-amber-700 dark:text-amber-400 flex flex-wrap items-center gap-1">
+                          <span>Preguntas sin completar:</span>
+                          {answers.map((r,i)=> (isValidRow(r) && r.locked) ? null : i).filter(i=> i!==null).map(i=> (
+                            <button key={i} className="px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 hover:underline" onClick={()=> { setCurrent(i); setShowResults(false); setEditFromResults(true); setJustJumped(true); }}>{i+1}</button>
+                          ))}
+                          <button className="ml-1 underline hover:no-underline" onClick={()=> { const i = answers.findIndex(r=> !(isValidRow(r) && r.locked)); if(i>=0){ setCurrent(i); setShowResults(false); setEditFromResults(true); setJustJumped(true); }}}>Ir a la primera →</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" onClick={()=>{ setAnswers(rows.map(()=> ({W:null,X:null,Y:null,Z:null,locked:false}))); setCurrent(0); setShowResults(false); setEditFromResults(false); setJustJumped(false); localStorage.removeItem('tp_v3_state'); }}>Volver a empezar</button>
+                    <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" onClick={downloadPDF}>Descargar PDF</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+    </script>
+  </body>
+</html>
