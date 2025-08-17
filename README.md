@@ -1,18 +1,11 @@
-
 # Test de Personalidad – DISC (Single-file)
 
-Repositorio listo para publicar: **index.html** + **README.md**. No requiere build.
+**v3.7** – Modo oscuro corregido a nivel global (se aplica en `<html>`), versión centrada en el footer y edición desde resultados.
 
-## Probar localmente
-- Descarga `index.html` y ábrelo con doble clic en tu navegador.
+## Publicar en GitHub (solo web)
+1. En el repo → **Code → _uploading an existing file_**.
+2. Sube `index.html` y `README.md` (estos archivos) → **Commit changes**.
+3. Abre: `https://<tu-usuario>.github.io/<repo>/?v=3.7` (cache-busting).
 
-## Publicar en GitHub (sin usar Git, solo con la web)
-1. Crea un repositorio **público** (ej. `disc-test`).
-2. En el repo: **Add file → Upload files** → sube `index.html` y `README.md` → **Commit changes**.
-3. Activa **GitHub Pages**: `Settings → Pages` → **Deploy from a branch** → `main` + `/(root)` → **Save**.
-4. Tu sitio quedará en: `https://<tu-usuario>.github.io/<nombre-del-repo>/`.
-
-## Notas
-- Guarda progreso en el dispositivo (LocalStorage). Botón **Volver a empezar** borra respuestas locales.
-- **PDF**: exporta puntajes, lectura espiritual y el mensaje pastoral.
-- Sigue el **tema del sistema** (claro/oscuro).
+## Tips
+- Si Safari iOS muestra la versión anterior, usa la URL con **`?v=3.7`** o recarga sin bloqueadores.
