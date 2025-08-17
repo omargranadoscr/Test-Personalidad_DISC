@@ -5,7 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Test de Personalidad – DISC</title>
     <meta name="description" content="Cuestionario DISC: reparte 4–3–2–1 en cada fila; resultados, lectura espiritual y PDF." />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🧭</text></svg>">
+
+    <!-- Icons & PWA -->
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
+    <meta name="theme-color" content="#0ea5e9">
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>tailwind.config = { darkMode: 'class' };</script>
     <style>html, body { height: 100%; }</style>
@@ -25,7 +33,7 @@
     <script type="text/babel">
       const { useState, useEffect, useMemo } = React;
       const { jsPDF } = window.jspdf || {};
-      const VERSION = "v3.7";
+      const VERSION = "v3.7 - 16/8/25"; // footer label
       const STATE_KEY='tp_v3_state'; const STATE_VER=4;
 
       // --- DATA ---
@@ -44,40 +52,16 @@
         { prompt: "Mis gestos suelen ser...", W: "Fuertes y rápidos", X: "Abiertos y amables", Y: "Comedidos", Z: "Restringidos e intencionados" },
         { prompt: "Mi forma favorita de vestirme es...", W: "Formal", X: "Casual", Y: "Dependiendo del lugar", Z: "Conservadora" },
         { prompt: "Mis actitudes en general se pueden describir como...", W: "Autoritario", X: "Elegante, amigable y extrovertido", Y: "Tolerante y abierto", Z: "Observador o reservado" },
-        { prompt: "Mis conversaciones giran en torno a...", W: "Ir al punto de la pregunta", X: "Historias sobre mí y sobre los demás", Y: "\"Cómo hacer\" y/o relaciones", Z: "Hechos, información y datos" },
+        { prompt: "Mis conversaciones giran en torno a...", W: "Ir al punto de la pregunta", X: "Historias sobre mí y sobre los demás", Y: ""Cómo hacer" y/o relaciones", Z: "Hechos, información y datos" },
       ];
 
       const columns = [ { key: 'W', label: 'W' }, { key: 'X', label: 'X' }, { key: 'Y', label: 'Y' }, { key: 'Z', label: 'Z' } ];
 
       const stylesMap = {
-        W: {
-          nombre: "Dominante",
-          virtudes: "Liderazgo, decisión, impulso para lograr resultados, valentía para tomar riesgos.",
-          riesgos: "Impaciencia, dureza, tendencia al control. Puede herir sin querer.",
-          versiculos: ["Proverbios 15:1 (Respuesta amable)", "Gálatas 5:22-23 (Fruto del Espíritu)"],
-          practicas: "Ejercitar mansedumbre, escuchar antes de hablar, delegar, orar por un corazón humilde.",
-        },
-        X: {
-          nombre: "Influyente",
-          virtudes: "Alegría, entusiasmo, carisma, hospitalidad; anima a los demás.",
-          riesgos: "Impulsividad, hablar de más, dificultad con la constancia.",
-          versiculos: ["Filipenses 4:4 (Regocíjense)", "Proverbios 10:19 (Prudencia al hablar)"],
-          practicas: "Cultivar disciplina y dominio propio; reservar tiempo de quietud y oración.",
-        },
-        Y: {
-          nombre: "Estable",
-          virtudes: "Paz, paciencia y constancia; escucha activa; crea estabilidad y armonía.",
-          riesgos: "Pasividad, posponer decisiones, evitar confrontaciones necesarias, resistencia al cambio.",
-          versiculos: ["Mateo 5:9 (Pacificadores)", "2 Timoteo 1:7 (Espíritu de poder)"],
-          practicas: "Pedir valentía al Espíritu, dar pasos pequeños pero firmes, establecer límites y ritmos saludables, hablar con verdad en amor.",
-        },
-        Z: {
-          nombre: "Conforme",
-          virtudes: "Excelencia, exactitud y precisión; enfoque en calidad; respeto por normas y procesos.",
-          riesgos: "Perfeccionismo, crítica dura (propia y ajena), pesimismo, rigidez ante la ambigüedad.",
-          versiculos: ["Colosenses 3:23 (Hacer como para el Señor)", "Salmo 139:14 (Hecho de manera maravillosa)"],
-          practicas: "Abrazar la gracia; distinguir el espíritu detrás de la norma; recordar que aquí 'Conforme' se refiere a conformidad técnica (calidad/precisión), no a 'conformarse al mundo'; celebrar el progreso; compartir con otros para no aislarse.",
-        },
+        W: { nombre: "Dominante", virtudes: "Liderazgo, decisión, impulso para lograr resultados, valentía para tomar riesgos.", riesgos: "Impaciencia, dureza, tendencia al control. Puede herir sin querer.", versiculos: ["Proverbios 15:1 (Respuesta amable)", "Gálatas 5:22-23 (Fruto del Espíritu)"], practicas: "Ejercitar mansedumbre, escuchar antes de hablar, delegar, orar por un corazón humilde." },
+        X: { nombre: "Influyente", virtudes: "Alegría, entusiasmo, carisma, hospitalidad; anima a los demás.", riesgos: "Impulsividad, hablar de más, dificultad con la constancia.", versiculos: ["Filipenses 4:4 (Regocíjense)", "Proverbios 10:19 (Prudencia al hablar)"], practicas: "Cultivar disciplina y dominio propio; reservar tiempo de quietud y oración." },
+        Y: { nombre: "Estable", virtudes: "Paz, paciencia y constancia; escucha activa; crea estabilidad y armonía.", riesgos: "Pasividad, posponer decisiones, evitar confrontaciones necesarias, resistencia al cambio.", versiculos: ["Mateo 5:9 (Pacificadores)", "2 Timoteo 1:7 (Espíritu de poder)"], practicas: "Pedir valentía al Espíritu, dar pasos pequeños pero firmes, establecer límites y ritmos saludables, hablar con verdad en amor." },
+        Z: { nombre: "Conforme", virtudes: "Excelencia, exactitud y precisión; enfoque en calidad; respeto por normas y procesos.", riesgos: "Perfeccionismo, crítica dura (propia y ajena), pesimismo, rigidez ante la ambigüedad.", versiculos: ["Colosenses 3:23 (Hacer como para el Señor)", "Salmo 139:14 (Hecho de manera maravillosa)"], practicas: "Abrazar la gracia; distinguir el espíritu detrás de la norma; recordar que aquí 'Conforme' se refiere a conformidad técnica (calidad/precisión), no a 'conformarse al mundo'; celebrar el progreso; compartir con otros para no aislarse." },
       };
 
       // --- helpers ---
@@ -145,18 +129,16 @@
 
       function App(){
         const [current, setCurrent] = useState(0);
-        const [answers, setAnswers] = useState(()=> rows.map(()=> ({W:null,X:null,Y:null,Z:null, locked:false})));
+        const [answers, setAnswers] = useState(()=> rows.map(()=> ({W:null,X:null,Y:null,Z:null,locked:false})));
         const [showResults, setShowResults] = useState(false);
         const [jumpIdx, setJumpIdx] = useState('');
         const [editFromResults, setEditFromResults] = useState(false);
-        const [justJumped, setJustJumped] = useState(false);
-        const [shouldFlash, setShouldFlash] = useState(false);
 
         // persistence (versioned)
         useEffect(()=>{ try{ const raw=localStorage.getItem(STATE_KEY); if(!raw) return; const parsed=JSON.parse(raw); if(parsed.version!==STATE_VER) return; if(Array.isArray(parsed.answers)&&parsed.answers.length===rows.length) setAnswers(parsed.answers); if(typeof parsed.current==='number') setCurrent(parsed.current); if(typeof parsed.showResults==='boolean') setShowResults(parsed.showResults); }catch(e){ console.warn('No se pudo cargar el estado',e); } },[]);
         useEffect(()=>{ try{ localStorage.setItem(STATE_KEY, JSON.stringify({version:STATE_VER,current,answers,showResults})); }catch(e){ console.warn('No se pudo guardar el estado',e); } },[current,answers,showResults]);
 
-        // theme auto -> toggle 'dark' on <html> (root) so body variants work
+        // theme auto -> toggle 'dark' on <html>
         useEffect(()=>{
           if(!window.matchMedia) return;
           const mm = window.matchMedia('(prefers-color-scheme: dark)');
@@ -234,7 +216,7 @@
                 </div>
 
                 {!showResults ? (
-                  <div className={`mt-6 p-4 rounded-2xl border bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 ${shouldFlash ? 'ring-2 ring-sky-500 dark:ring-sky-300 shadow-lg' : ''}`}>
+                  <div className="mt-6 p-4 rounded-2xl border bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700">
                     {editFromResults && (
                       <div className="mb-4 p-3 rounded-xl border bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700">
                         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
@@ -243,9 +225,9 @@
                             <div className="text-xs text-amber-700 dark:text-amber-400 flex flex-wrap items-center gap-1">
                               <span>Preguntas sin completar:</span>
                               {answers.map((r,i)=> (isValidRow(r) && r.locked) ? null : i).filter(i=> i!==null).map(i=> (
-                                <button key={i} className="px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 hover:underline" onClick={()=> { setCurrent(i); setShowResults(false); setEditFromResults(true); setJustJumped(true); }}>{i+1}</button>
+                                <button key={i} className="px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 hover:underline" onClick={()=> { setCurrent(i); setShowResults(false); setEditFromResults(true); }}>{i+1}</button>
                               ))}
-                              <button className="ml-1 underline hover:no-underline" onClick={()=> { const first = answers.findIndex(r=> !(isValidRow(r) && r.locked)); if(first>=0){ setCurrent(first); setShowResults(false); setEditFromResults(true); setJustJumped(true); } }}>Ir a la primera →</button>
+                              <button className="ml-1 underline hover:no-underline" onClick={()=> { const first = answers.findIndex(r=> !(isValidRow(r) && r.locked)); if(first>=0){ setCurrent(first); setShowResults(false); setEditFromResults(true); } }}>Ir a la primera →</button>
                             </div>
                           )}
                         </div>
@@ -269,7 +251,7 @@
                       ))}
                     </div>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 disabled:opacity-50" onClick={handlePrev} disabled={current===0}>← Anterior</button>
+                      <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" onClick={handlePrev} disabled={current===0}>← Anterior</button>
                       <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" onClick={handleResetRow}>Borrar selección actual</button>
                       <button className={`px-4 py-2 rounded-xl text-white ${allSelected? 'bg-black dark:bg-white dark:text-black' : 'bg-gray-400'}`} onClick={handleConfirm} disabled={!allSelected}>Confirmar y {current<rows.length-1? 'siguiente →' : 'finalizar →'}</button>
                     </div>
@@ -293,7 +275,7 @@
                             <option key={i} value={i+1}>{i+1}. {(r.prompt.length>60)? (r.prompt.slice(0,60)+'…') : r.prompt}</option>
                           ))}
                         </select>
-                        <button className="w-full sm:w-auto px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 disabled:opacity-50" onClick={()=>{ const n = parseInt(jumpIdx,10); if(!Number.isNaN(n) && n>=1 && n<=rows.length){ setCurrent(n-1); setShowResults(false); setEditFromResults(true); setJustJumped(true); }}} disabled={!jumpIdx}>Ir a editar →</button>
+                        <button className="w-full sm:w-auto px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700 disabled:opacity-50" onClick={()=>{ const n = parseInt(jumpIdx,10); if(!Number.isNaN(n) && n>=1 && n<=rows.length){ setCurrent(n-1); setShowResults(false); setEditFromResults(true); }}} disabled={!jumpIdx}>Ir a editar →</button>
                         <span className="text-xs text-gray-600 dark:text-gray-400">(No borra tus demás respuestas)</span>
                       </div>
                     </div>
@@ -305,16 +287,16 @@
                           <div className="mt-2 sm:mt-0 text-xs text-amber-700 dark:text-amber-400 flex flex-wrap items-center gap-1">
                             <span>Preguntas sin completar:</span>
                             {answers.map((r,i)=> (isValidRow(r) && r.locked) ? null : i).filter(i=> i!==null).map(i=> (
-                              <button key={i} className="px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 hover:underline" onClick={()=> { setCurrent(i); setShowResults(false); setEditFromResults(true); setJustJumped(true); }}>{i+1}</button>
+                              <button key={i} className="px-2 py-1 rounded-lg border border-amber-300 dark:border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 hover:underline" onClick={()=> { setCurrent(i); setShowResults(false); setEditFromResults(true); }}>{i+1}</button>
                             ))}
-                            <button className="ml-1 underline hover:no-underline" onClick={()=> { const i = answers.findIndex(r=> !(isValidRow(r) && r.locked)); if(i>=0){ setCurrent(i); setShowResults(false); setEditFromResults(true); setJustJumped(true); }}}>Ir a la primera →</button>
+                            <button className="ml-1 underline hover:no-underline" onClick={()=> { const i = answers.findIndex(r=> !(isValidRow(r) && r.locked)); if(i>=0){ setCurrent(i); setShowResults(false); setEditFromResults(true); }}}>Ir a la primera →</button>
                           </div>
                         )}
                       </div>
                     </div>
 
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" onClick={()=>{ setAnswers(rows.map(()=> ({W:null,X:null,Y:null,Z:null,locked:false}))); setCurrent(0); setShowResults(false); setEditFromResults(false); setJustJumped(false); localStorage.removeItem('tp_v3_state'); }}>Volver a empezar</button>
+                      <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" onClick={()=>{ setAnswers(rows.map(()=> ({W:null,X:null,Y:null,Z:null,locked:false}))); setCurrent(0); setShowResults(false); localStorage.removeItem('tp_v3_state'); }}>Volver a empezar</button>
                       <button className="px-4 py-2 rounded-xl border bg-white text-black hover:bg-gray-50 dark:bg-neutral-800 dark:text-white dark:border-neutral-700 dark:hover:bg-neutral-700" onClick={downloadPDF}>Descargar PDF</button>
                     </div>
                   </div>
