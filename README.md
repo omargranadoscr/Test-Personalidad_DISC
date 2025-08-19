@@ -47,7 +47,7 @@
 - Footer con número de versión visible; layout `min-h-screen` para fijar el pie al fondo.
 
 ### 3.6
-- Ajustes de accesibilidad y microcopys (Ej.: “Borrar selección actual”).  
+- Ajustes de accesibilidad y microcopias (Ej.: “Borrar selección actual”).  
 - Pack listo para GitHub Pages (HTML + README + ZIP).
 
 ### 3.7
